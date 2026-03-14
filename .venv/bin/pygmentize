@@ -1,8 +1,0 @@
-#!/bin/sh
-'''exec' "/Users/beike/Desktop/PolyU/semester_2/DSAI 5201/Project/code/RAG_Q&A_System/.venv/bin/python3" "$0" "$@"
-' '''
-import sys
-from pygments.cmdline import main
-if __name__ == '__main__':
-    sys.argv[0] = sys.argv[0].removesuffix('.exe')
-    sys.exit(main())
