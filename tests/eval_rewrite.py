@@ -25,25 +25,29 @@ def run_evaluation():
     test_cases = [
         {
             "id": 1,
-            "vague_query": "what parameters did they use for the optimizer in the original transformer paper?",
-            "target_doc": "The original Transformer uses the Adam optimizer with beta1=0.9, beta2=0.98 and epsilon=10^-9."
+            # 模糊问题 (对应 Abstract 1: Zero-shot CoT)
+            "vague_query": "how to make the model reason step by step without giving it any examples?",
+            "target_doc": "While these successes are often attributed to LLMs' ability for few-shot learning, we show that LLMs are decent zero-shot reasoners by simply adding ``Let's think step by step'' before each answer. Experimental results demonstrate that our Zero-shot-CoT... significantly outperforms zero-shot LLM performances on diverse benchmark reasoning tasks including arithmetics (MultiArith, GSM8K, AQUA-RAT, SVAMP)..."
         },
         {
             "id": 2,
-            "vague_query": "how does the transformer prevent seeing the future?",
-            "target_doc": "We modify the self-attention sub-layer in the decoder stack to prevent positions from attending to subsequent positions. This masking ensures predictions depend only on known outputs."
+            # 一般问题 (对应 Abstract 3: ReAct)
+            "vague_query": "combining reasoning and acting in language models to solve tasks",
+            "target_doc": "In this paper, we explore the use of LLMs to generate both reasoning traces and task-specific actions in an interleaved manner, allowing for greater synergy between the two... We apply our approach, named ReAct, to a diverse set of language and decision making tasks and demonstrate its effectiveness... Concretely, on question answering (HotpotQA) and fact verification (Fever)..."
         },
         {
             "id": 3,
-            "vague_query": "tell me the datasets used to train the GPT-3 architecture.",
-            "target_doc": "Datasets for GPT-3 pretraining include filtered CommonCrawl, WebText2, Books1, Books2, and Wikipedia."
+            # 好问题 (对应 Abstract 2: MMLU) - 测试系统是否能保持高分不帮倒忙
+            "vague_query": "what is the MMLU benchmark with 57 tasks for evaluating massive multitask language understanding?",
+            "target_doc": "We propose a new test to measure a text model's multitask accuracy. The test covers 57 tasks including elementary mathematics, US history, computer science, law, and more... By comprehensively evaluating the breadth and depth of a model's academic and professional understanding, our test can be used to analyze models across many tasks and to identify important shortcomings."
         },
         {
             "id": 4,
-            "vague_query": "optimizer parameters",
-            # 故意塞入假的历史失败记录，逼迫大模型反思，绕开这些词去寻找新的学术词汇
-            "failed_queries": ["optimizer parameters", "Adam", "learning rate"],
-            "target_doc": "The original Transformer uses the Adam optimizer with beta1=0.9, beta2=0.98 and epsilon=10^-9."
+            # 反思测试 (对应 Abstract 1: Zero-shot CoT)
+            "vague_query": "zero-shot reasoning in LLMs",
+            # 故意屏蔽掉最明显的宏观词，逼迫大模型去想 GSM8K, MultiArith 等具体的数据集或 "Let's think step by step" 这种具体 prompt
+            "failed_queries": ["zero-shot reasoning in LLMs", "zero-shot-CoT algorithm", "step-by-step reasoning"],
+            "target_doc": "While these successes are often attributed to LLMs' ability for few-shot learning, we show that LLMs are decent zero-shot reasoners by simply adding ``Let's think step by step'' before each answer. Experimental results demonstrate that our Zero-shot-CoT... significantly outperforms zero-shot LLM performances on diverse benchmark reasoning tasks including arithmetics (MultiArith, GSM8K, AQUA-RAT, SVAMP)..."
         }
     ]
 

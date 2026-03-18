@@ -50,9 +50,9 @@ from app.services.llm_service import get_llm
 # 1. 定义强制大模型输出的 JSON 数据结构 (Structured Output)
 # ------------------------------------------------------------
 class RewriteOutput(BaseModel):
-    """强制大模型输出的结构体，只允许包含关键词列表"""
-    keywords: List[str] = Field(
-        description="A list of core entities, academic terms, and keywords extracted or expanded from the query, optimized for semantic vector search."
+    """强制大模型输出的结构体，只允许包含一句完整的学术检索陈述/问句"""
+    search_phrase: str = Field(
+        description="A concise, highly professional academic search phrase optimized for dense vector search. Do NOT output a list of keywords. Extract the true academic intent and correct any colloquial or inaccurate terms."
     )
 
 
@@ -72,11 +72,17 @@ class RewriteOutput(BaseModel):
 # Instead of just listing disconnected keywords, combine the core entities, authors, and technical terms into a coherent search phrase optimized for dense vector retrieval.
 # Do not use conversational filler words like "tell me" or "what is"."""
 
-# T 提议加强版
-FIRST_TRY_SYSTEM_PROMPT = """You are an expert academic search query rewriting assistant.
-Your task is to rewrite the user's vague query into a highly specific, descriptive academic search phrase optimized for dense vector retrieval.
-Instead of listing disconnected keywords, seamlessly combine the core entities—specifically focusing on algorithms, authors, evaluation metrics, and core mechanisms—into a single coherent semantic phrase.
-Strictly exclude conversational filler words (e.g., 'tell me about', 'what is', 'how does')."""
+# # T 提议加强版
+# FIRST_TRY_SYSTEM_PROMPT = """You are an expert academic search query rewriting assistant.
+# Your task is to rewrite the user's vague query into a highly specific, descriptive academic search phrase optimized for dense vector retrieval.
+# Instead of listing disconnected keywords, seamlessly combine the core entities—specifically focusing on algorithms, authors, evaluation metrics, and core mechanisms—into a single coherent semantic phrase.
+# Strictly exclude conversational filler words (e.g., 'tell me about', 'what is', 'how does')."""
+
+# # AI/Math 改进版
+# FIRST_TRY_SYSTEM_PROMPT = """You are an expert academic search query rewriting assistant specializing in AI, Large Language Models (LLMs), and Mathematical Reasoning.
+# Your task is to rewrite the user's vague query into a highly specific, descriptive academic search phrase optimized for dense vector retrieval.
+# Instead of listing disconnected keywords, seamlessly combine the core entities—specifically focusing on AI models (e.g., PaLM, GPT-3), prompting techniques (e.g., Chain of Thought, ReAct), benchmark datasets (e.g., GSM8K, MMLU), and core mathematical reasoning mechanisms—into a single coherent semantic phrase.
+# Strictly exclude conversational filler words (e.g., 'tell me about', 'what is', 'how does')."""
 
 # # 防向量稀释版
 # FIRST_TRY_SYSTEM_PROMPT = """You are an expert academic search query rewriting assistant.
@@ -84,6 +90,31 @@ Strictly exclude conversational filler words (e.g., 'tell me about', 'what is', 
 # CRITICAL CONSTRAINTS:
 # 1. Do not use conversational filler words (e.g., 'what is', 'tell me').
 # 2. Keep it concise. Output a MAXIMUM of 4 to 6 core words or entities. Vector databases perform poorly with overly long keyword stuffing."""
+
+# # 稠密向量语义优化版 (Dense Semantic Rewrite)
+# FIRST_TRY_SYSTEM_PROMPT = """You are an expert academic search assistant specializing in AI and Big Data.
+# The user will provide a vague query. Your task is to rewrite it into a highly professional, coherent academic statement or precise question that captures the core semantic intent.
+#
+# CRITICAL CONSTRAINTS FOR DENSE VECTOR RETRIEVAL (e.g., BGE/BERT):
+# 1. DO NOT output a disconnected list of keywords. Output a natural, flowing academic sentence.
+# 2. DO NOT hallucinate specific datasets (e.g., GSM8K), model names (e.g., GPT-3), or metrics UNLESS they are heavily implied by the user's query.
+# 3. Translate informal words into academic terminology (e.g., "make model think" -> "elicit reasoning capabilities").
+# 4. Ensure the output resembles a sentence you would find in an abstract of a paper.
+#
+# Output ONLY the rewritten sentence."""
+
+# 最终版
+FIRST_TRY_SYSTEM_PROMPT = """You are an expert AI/Math academic search assistant.
+Your task is to optimize the user's query for a dense vector database (BGE/BERT).
+
+CRITICAL CONSTRAINTS:
+1. ALIGN & CORRECT TERMINOLOGY: Extract the true academic intent. If the user uses colloquialisms or inaccurate terms (e.g., calling an API interaction "reinforcement learning"), correct it to the standard academic jargon. If they use correct jargon, keep it.
+2. EXPAND INTELLIGENTLY: Add 1 or 2 universally accepted academic terms/mechanisms that directly underlie the user's concept.
+3. NO HALLUCINATION: DO NOT add specific dataset names (e.g., GSM8K) or model names (e.g., GPT-3) UNLESS the user explicitly mentioned them.
+4. CONCISE FORMAT: Output a short, punchy search phrase (e.g., "zero-shot chain of thought reasoning"). NO conversational filler ("What is", "How to").
+5. If the user's original query is already a highly professional, well-structured academic phrase (e.g., containing specific metrics, full dataset names), DO NOT compress it. Act as a pass-through and retain its full descriptive richness.
+
+Output ONLY the optimized search phrase."""
 
 # # 原版
 # RETRY_SYSTEM_PROMPT = """You are an expert academic search query rewriting assistant.
@@ -104,20 +135,50 @@ Strictly exclude conversational filler words (e.g., 'tell me about', 'what is', 
 # Do NOT use abstract or overly broad terms. Instead, dive deeper into specific sub-components, exact mathematical variables, specific algorithms, or niche metrics related to the original query.
 # Generate a highly specific, coherent search phrase that avoids the failed terms but targets the deep technical details."""
 
-# 防向量稀释版
-RETRY_SYSTEM_PROMPT = """You are an expert academic search query rewriting assistant.
+# # 防向量稀释版
+# RETRY_SYSTEM_PROMPT = """You are an expert academic search query rewriting assistant.
+# The user previously searched for: "{original_query}"
+# Failed attempts: {failed_queries_str}
+#
+# Since previous terms failed, you MUST dive deeper into specific mathematical variables, niche metrics, or exact sub-components.
+# CRITICAL CONSTRAINTS:
+# 1. Avoid broad, abstract terms.
+# 2. Output a MAXIMUM of 3 to 5 highly specific words.
+#
+# EXAMPLE:
+# User: neural network performance
+# Failed: accuracy, loss
+# Good Output: F1-score perplexity cross-entropy"""
+
+# # AI/Math 改进版
+# RETRY_SYSTEM_PROMPT = """You are an expert academic search query rewriting assistant specializing in AI and LLMs.
+# The user previously searched for: "{original_query}"
+# Failed attempts: {failed_queries_str}
+#
+# Since previous terms failed, you MUST dive deeper into niche evaluation metrics, exact algorithms, specific datasets, or mathematical techniques related to the query.
+# CRITICAL CONSTRAINTS:
+# 1. Avoid broad, abstract AI terms.
+# 2. Output a MAXIMUM of 3 to 5 highly specific technical words.
+#
+# EXAMPLE:
+# User: LLM math test
+# Failed: math dataset evaluation, LLM mathematical ability
+# Good Output: GSM8K AQUA-RAT MultiArith benchmark"""
+
+# 稠密向量语义优化版 - 反思重试 (Dense Semantic Rewrite - Retry)
+RETRY_SYSTEM_PROMPT = """You are an expert academic search assistant specializing in AI and Big Data.
 The user previously searched for: "{original_query}"
-Failed attempts: {failed_queries_str}
+The system already tried the following queries but failed to find relevant documents:
+{failed_queries_str}
 
-Since previous terms failed, you MUST dive deeper into specific mathematical variables, niche metrics, or exact sub-components. 
-CRITICAL CONSTRAINTS:
-1. Avoid broad, abstract terms.
-2. Output a MAXIMUM of 3 to 5 highly specific words. 
+Since previous attempts failed, you MUST change the semantic perspective.
+CRITICAL CONSTRAINTS FOR DENSE VECTOR RETRIEVAL (e.g., BGE/BERT):
+1. Pivot the terminology: Use alternative academic synonyms, broader conceptual framing, or describe the underlying mechanism differently.
+2. DO NOT hallucinate specific datasets, model names, or niche metrics unless explicitly requested by the user. Abstracts often do not contain them.
+3. Output a single, natural, flowing academic sentence or phrase (similar to what you would read in a paper's abstract).
+4. DO NOT output a disconnected list of keywords.
 
-EXAMPLE:
-User: neural network performance
-Failed: accuracy, loss
-Good Output: F1-score perplexity cross-entropy"""
+Output ONLY the new rewritten sentence."""
 
 
 # ------------------------------------------------------------
@@ -170,12 +231,12 @@ def rewrite_query(state: GraphState) -> dict:
             summary_prefix = f"Retry #{len(failed_queries)}"
 
         # 校验大模型是否成功返回了 keywords 列表
-        if result and result.keywords:
-            # 将大模型返回的关键词列表用空格拼装为普通 String，供 FAISS 检索
-            rewritten = " ".join(result.keywords)
-            summary = f"[{summary_prefix}] Rewrote query into {len(result.keywords)} keywords."
+        if result and result.search_phrase:
+            # 直接提取生成的学术句子，不再需要 join 拼接
+            rewritten = result.search_phrase
+            summary = f"[{summary_prefix}] Rewrote query to semantic phrase."
         else:
-            summary = f"[{summary_prefix}] LLM returned empty keywords, fallback to original query."
+            summary = f"[{summary_prefix}] LLM returned empty phrase, fallback to original query."
 
     except Exception as e:
         # 绝对不抛出异常导致图崩溃！记录错误并触发原样放行的 Fallback
