@@ -3,10 +3,10 @@ import os
 
 load_dotenv()
 
-
 # LLM
-LLM_API_KEY = os.getenv("OPENAI_API_KEY")
-LLM_MODEL_NAME = os.getenv("LLM_MODEL_NAME", "gpt-4o-mini")
+LLM_API_KEY = os.getenv("LLM_API_KEY")
+LLM_MODEL = "qwen-plus"
+LLM_BASE_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1"
 LLM_TEMPERATURE = 0.0
 
 # Router

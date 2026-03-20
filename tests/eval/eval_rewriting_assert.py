@@ -8,18 +8,18 @@ import pytest
 from app.nodes.rewriting import rewrite_query
 
 
-def make_state(query: str, failed_queries: list = None) -> dict:
+def make_state(query: str, failed_queries: list = None) -> dict: # type: ignore
     """Build a minimal state dict for testing."""
     state = {"query": query}
     if failed_queries is not None:
-        state["failed_queries"] = failed_queries
+        state["failed_queries"] = failed_queries # type: ignore
     return state
 
 
 def test_case1_remove_colloquial_filler():
     """测试小白问题：必须去除口语化废话，并尽量提取或保留核心学术动作"""
     state = make_state("how to make the model reason step by step without giving it any examples?")
-    result = rewrite_query(state)
+    result = rewrite_query(state) # type: ignore
     rewritten = result["rewritten_query"].lower()
     print(f"\ncase 1 [真实改写结果]: {rewritten}")
 
@@ -34,7 +34,7 @@ def test_case2_preserve_perfect_query():
     """测试完美问题（不惩罚好用户）：原问题极好时，不能过度压缩，必须保留核心实体"""
     original = "what is the MMLU benchmark with 57 tasks for evaluating massive multitask language understanding?"
     state = make_state(original)
-    result = rewrite_query(state)
+    result = rewrite_query(state) # type: ignore
     rewritten = result["rewritten_query"].lower()
     print(f"\ncase 2 [真实改写结果]: {rewritten}")
 
@@ -48,7 +48,7 @@ def test_case2_preserve_perfect_query():
 def test_case3_jargon_preservation():
     """测试学术黑话保全：绝对不能把行业的约定俗成替换成普通的同义词"""
     state = make_state("combining reasoning and acting in LLMs")
-    result = rewrite_query(state)
+    result = rewrite_query(state) # type: ignore
     rewritten = result["rewritten_query"].lower()
     print(f"\ncase 3 [真实改写结果]: {rewritten}")
 
@@ -63,7 +63,7 @@ def test_case4_retry_logic_avoids_failed_history():
     failed_history = ["math problem solving algorithms", "mathematical logic reasoning neural networks"]
     state = make_state(original, failed_queries=failed_history)
 
-    result = rewrite_query(state)
+    result = rewrite_query(state) # type: ignore
     rewritten = result["rewritten_query"].lower()
     print(f"\ncase 4 [真实改写结果]: {rewritten}")
 
@@ -78,7 +78,7 @@ def test_case4_retry_logic_avoids_failed_history():
 def test_returns_required_contract_keys():
     """测试契约：必须严格遵守 GraphState 的输入输出规范"""
     state = make_state("test query")
-    result = rewrite_query(state)
+    result = rewrite_query(state) # type: ignore
 
     assert "rewritten_query" in result
     assert "failed_queries" in result

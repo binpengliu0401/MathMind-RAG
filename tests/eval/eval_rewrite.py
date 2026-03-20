@@ -61,7 +61,7 @@ def run_evaluation():
         if "failed_queries" in case:
             state["failed_queries"] = case["failed_queries"]
 
-        result = rewrite_query(state)
+        result = rewrite_query(state) # type: ignore
         rewritten_query = result.get("rewritten_query", "")
         print(f"✨ Rewritten Query: {rewritten_query}")
 
