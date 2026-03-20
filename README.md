@@ -29,65 +29,78 @@ User Query
 ## Project Structure
 
 ```
-app/
-├── graph/
-│   ├── state.py              # GraphState schema
-│   ├── builder.py            # LangGraph assembly
-│   └── router.py             # Conditional Router — Node 5
-├── nodes/
-│   ├── rewriting.py          # Node 1 — Query Rewriting (Chen)
-│   ├── retrieval.py          # Node 2 — FAISS Retrieval (Li)
-│   ├── generation.py         # Node 3 — LLM Generation (Liu)
-│   └── grading.py            # Node 4 — Hallucination Grading (Hu)
-├── dataset_processing/       # Data pipeline (Li)
-│   ├── dataset_loader.py
-│   ├── embedder.py
-│   └── vector_store.py
-├── services/
-│   ├── llm_service.py        # Qwen via DashScope (LangChain-compatible)
-│   └── retriever.py          # RAGRetriever — FAISS index management
-├── utils/
-│   ├── tracer.py
-│   └── constants.py
-├── api/
-└── main.py                   # CLI entry point
-
-backend/                      # FastAPI + WebSocket server (Hu)
-├── src/
-│   ├── api/
-│   ├── engines/              # core / fake engine modes
-│   ├── schemas/
-│   └── main.py
-└── run.py                    # Backend entry point
-
-web/                          # React frontend (Hu)
-├── src/
-└── package.json
-
-config/                       # Centralized configuration
-├── logging.py
-└── settings.py
-
-scripts/
-└── build_index.py            # One-time FAISS index builder
-
-data/
-├── train-00000-of-00001.parquet   # AI/Math paper dataset (not in git)
-└── index/                         # FAISS index files (not in git)
-
-tests/
-├── unit/
-│   ├── test_rewriting.py
-│   ├── test_retrieval.py
-│   ├── test_grading.py
-│   ├── test_workflow.py
-│   ├── test_llm_service.py
-│   ├── test_llm_service_live.py
-│   └── test_backend_service.py
-└── eval/
-    ├── eval_behavior.py
-    ├── eval_rewrite.py
-    └── eval_rewriting_assert.py
+MathMind-RAG/
+├── app/                          # Core RAG pipeline
+│   ├── graph/
+│   │   ├── state.py              # GraphState schema — shared contract
+│   │   ├── builder.py            # LangGraph graph assembly
+│   │   └── router.py             # Conditional Router — Node 5
+│   ├── nodes/
+│   │   ├── rewriting.py          # Node 1 — Query Rewriting
+│   │   ├── retrieval.py          # Node 2 — FAISS Retrieval
+│   │   ├── generation.py         # Node 3 — LLM Generation
+│   │   └── grading.py            # Node 4 — Hallucination Grading
+│   ├── dataset_processing/       # Data pipeline
+│   │   ├── dataset_loader.py     # Load parquet → List[Document]
+│   │   ├── embedder.py           # BAAI/bge-base-en-v1.5 embeddings
+│   │   └── vector_store.py       # FAISS index build / search / save
+│   ├── services/
+│   │   ├── llm_service.py        # Qwen via DashScope (LangChain-compatible)
+│   │   └── retriever.py          # RAGRetriever — end-to-end retrieval pipeline
+│   ├── utils/
+│   │   ├── constants.py          # Environment variables and defaults
+│   │   └── tracer.py             # build_trace_entry() helper
+│   ├── api/                      # FastAPI routes
+│   └── main.py                   # CLI entry point
+│
+├── backend/                      # WebSocket + FastAPI server
+│   ├── src/
+│   │   ├── api/
+│   │   │   ├── routes.py         # REST endpoints
+│   │   │   └── websocket.py      # WebSocket handler
+│   │   ├── engines/
+│   │   │   ├── core_engine.py    # Full RAG pipeline engine
+│   │   │   └── fake_engine.py    # Mock engine for frontend demo
+│   │   ├── schemas/              # Request / response models
+│   │   └── main.py               # FastAPI app factory
+│   └── run.py                    # Backend entry point
+│
+├── web/                          # React frontend
+│   ├── src/
+│   │   ├── app/                  # Components, hooks, types
+│   │   └── styles/               # CSS and theme
+│   ├── index.html
+│   └── package.json
+│
+├── config/                       # Centralized configuration
+│   ├── logging.py                # Logging setup
+│   └── settings.py               # Pydantic settings model
+│
+├── scripts/
+│   └── build_index.py            # One-time FAISS index builder
+│
+├── data/                         # Not in git
+│   ├── train-00000-of-00001.parquet   # AI/Math paper dataset
+│   └── index/                         # Generated FAISS index files
+│
+├── tests/
+│   ├── unit/                     # pytest unit tests
+│   │   ├── test_rewriting.py
+│   │   ├── test_retrieval.py
+│   │   ├── test_grading.py
+│   │   ├── test_workflow.py
+│   │   ├── test_llm_service.py
+│   │   ├── test_llm_service_live.py
+│   │   └── test_backend_service.py
+│   └── eval/                     # Quantitative evaluation scripts
+│       ├── eval_behavior.py
+│       ├── eval_rewrite.py
+│       └── eval_rewriting_assert.py
+│
+├── conftest.py                   # pytest path configuration
+├── requirements.txt
+├── .env.example
+└── README.md
 ```
 
 ---
@@ -117,6 +130,8 @@ Download the dataset from HuggingFace and place it in `data/`:
 data/train-00000-of-00001.parquet
 ```
 
+Dataset source: <https://huggingface.co/datasets/fzyzcjy/ai_math_paper_list>
+
 Then build the FAISS index:
 
 ```bash
@@ -141,13 +156,13 @@ See `.env.example`. Each person fills in their own `.env` — never commit this 
 
 ## Running the System
 
-**Backend:**
+**Backend** (Terminal 1):
 
 ```bash
 python -m backend.run
 ```
 
-**Frontend** (separate terminal):
+**Frontend** (Terminal 2):
 
 ```bash
 cd web
@@ -155,14 +170,15 @@ npm install   # first time only
 npm run dev
 ```
 
-Frontend available at `http://localhost:5173`.
+Frontend available at `http://localhost:5173`.  
+Backend running at `http://localhost:8000`.
 
 ---
 
 ## GraphState Contract
 
 All nodes share a single `GraphState`. Do not add or rename fields without
-discussing with the system architect (Liu) first.
+discussing with the system architect first.
 
 | Field | Type | Description |
 |-------|------|-------------|
@@ -203,6 +219,6 @@ python -m tests.eval.eval_rewrite
 
 ## Dataset
 
-**ai_math_paper_list** — 1220 AI and Math academic papers from HuggingFace.  
+**ai_math_paper_list** — 1220 AI and Math academic papers.  
 Source: <https://huggingface.co/datasets/fzyzcjy/ai_math_paper_list>  
 Each paper's abstract is used as a retrieval unit. Title is stored as metadata.
