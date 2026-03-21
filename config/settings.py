@@ -102,6 +102,7 @@ class RagSettings:
 class LLMSettings:
     api_key: str | None
     model_name: str
+    base_url: str
     temperature: float
 
 
@@ -195,8 +196,12 @@ def load_settings() -> SystemSettings:
     )
 
     llm = LLMSettings(
-        api_key=_first(("OPENAI_API_KEY",)),
-        model_name=_first(("LLM_MODEL_NAME",), "gpt-4o-mini") or "gpt-4o-mini",
+        api_key=_first(("LLM_API_KEY",)),
+        model_name=_first(("LLM_MODEL",), "qwen-plus") or "qwen-plus",
+        base_url=(
+            _first(("LLM_BASE_URL",), "https://dashscope.aliyuncs.com/compatible-mode/v1")
+            or "https://dashscope.aliyuncs.com/compatible-mode/v1"
+        ),
         temperature=_get_float(("LLM_TEMPERATURE",), 0.0),
     )
 

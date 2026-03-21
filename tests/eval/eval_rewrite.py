@@ -5,8 +5,9 @@ import numpy as np
 from dotenv import load_dotenv
 from langchain_huggingface import HuggingFaceEmbeddings
 from app.nodes.rewriting import rewrite_query
+from config.settings import ROOT_DIR
 
-load_dotenv()
+load_dotenv(ROOT_DIR / ".env", override=False)
 
 print("⏳ Loading local embedding model (BAAI/bge-base-en-v1.5)...")
 embedder = HuggingFaceEmbeddings(model_name="BAAI/bge-base-en-v1.5")

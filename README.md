@@ -133,7 +133,7 @@ See `.env.example`. Each person fills in their own `.env` — never commit this 
 
 | Variable | Description |
 |----------|-------------|
-| `LLM_API_KEY` | DashScope API key for Qwen |
+| `LLM_API_KEY` | API key for the configured LLM provider |
 | `RAG_ENGINE_MODE` | `fake` for frontend demo, `core` for full pipeline |
 | `FAISS_INDEX_PATH` | Path to FAISS index directory |
 
