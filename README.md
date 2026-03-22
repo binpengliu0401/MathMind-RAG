@@ -112,7 +112,7 @@ MathMind-RAG/
 ├── main.py                       # Pipeline entry point — exposes run_workflow()
 ├── conftest.py                   # pytest path configuration
 ├── requirements.txt
-├── .env.example
+├── .env.example                  # Environment variable template — copy to .env
 └── README.md
 ```
 
@@ -128,10 +128,24 @@ python -m venv .venv
 source .venv/bin/activate  # Windows: .venv\Scripts\activate
 
 pip install -r requirements.txt
-
-cp .env.example .env
-# Fill in your own API keys in .env
 ```
+
+**Configure environment:**
+
+```bash
+cp .env.example .env
+```
+
+Then open `.env` and set your API key:
+
+```dotenv
+LLM_API_KEY=your_dashscope_api_key_here
+```
+
+This is the only field you must fill in. All other values have sensible defaults
+and can be left as-is for local development.
+
+Get your DashScope API key at: <https://dashscope.aliyuncs.com/>
 
 ---
 
@@ -160,14 +174,20 @@ Dataset source: <https://huggingface.co/datasets/fzyzcjy/ai_math_paper_list>
 
 ## Environment Variables
 
-See `.env.example`. Each person fills in their own `.env` — never commit this file.
+Copy `.env.example` to `.env` — never commit `.env` to git.
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `LLM_API_KEY` | DashScope API key for Qwen | — |
-| `RAG_ENGINE_MODE` | `core` for full pipeline, `fake` for frontend demo | `fake` |
-| `FAISS_INDEX_PATH` | Path to FAISS index directory | `./data/faiss_index` |
-| `LLM_MODEL` | Qwen model name | `qwen-turbo` |
+| Variable | Required | Description | Default |
+|----------|----------|-------------|---------|
+| `LLM_API_KEY` | **Yes** | DashScope API key for Qwen | — |
+| `RAG_ENGINE_MODE` | No | `core` for full pipeline, `fake` for UI testing only | `core` |
+| `RAG_FAISS_INDEX_PATH` | No | Path to FAISS index directory | `./data/faiss_index` |
+| `LLM_MODEL` | No | Qwen model name | `qwen-turbo` |
+| `LLM_BASE_URL` | No | DashScope-compatible endpoint | `https://dashscope.aliyuncs.com/compatible-mode/v1` |
+| `BACKEND_PORT` | No | Backend server port | `8000` |
+| `FRONTEND_PORT` | No | Frontend dev server port | `5173` |
+| `ALLOWED_ORIGINS` | No | CORS allowed origins | `http://127.0.0.1:5173,http://localhost:5173` |
+
+All variables not listed above also have defaults defined in `config/settings.py`.
 
 ---
 

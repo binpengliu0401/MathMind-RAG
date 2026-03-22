@@ -5,9 +5,10 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable
 from urllib.parse import urlparse
-
 from dotenv import load_dotenv
+import os
 
+RAG_ENGINE_MODE = os.getenv("RAG_ENGINE_MODE", "core")
 
 ROOT_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(ROOT_DIR / ".env", override=False)
@@ -181,7 +182,7 @@ def load_settings() -> SystemSettings:
 
     rag = RagSettings(
         engine_mode=(
-            _first(("RAG_ENGINE_MODE", "BACKEND_ENGINE_MODE"), "fake") or "fake"
+            _first(("RAG_ENGINE_MODE", "BACKEND_ENGINE_MODE"), "core") or "core"
         ).lower(),
         max_retries=_get_int(("RAG_MAX_RETRIES",), 2),
         hallucination_threshold=_get_float(("RAG_HALLUCINATION_THRESHOLD",), 0.7),
