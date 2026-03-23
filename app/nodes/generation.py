@@ -40,7 +40,7 @@ def generate_answer(state: GraphState) -> dict:
         retrieved_docs = state["retrieved_docs"]
 
         context = format_docs(retrieved_docs)
-        llm = get_llm()
+        llm = get_llm("generation")
 
         # LCEL
         chain = GENERATION_PROMPT | llm

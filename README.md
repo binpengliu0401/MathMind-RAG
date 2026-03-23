@@ -139,13 +139,13 @@ cp .env.example .env
 Then open `.env` and set your API key:
 
 ```dotenv
-LLM_API_KEY=your_dashscope_api_key_here
+LLM_API_KEY=your_openrouter_api_key_here
 ```
 
 This is the only field you must fill in. All other values have sensible defaults
 and can be left as-is for local development.
 
-Get your DashScope API key at: <https://dashscope.aliyuncs.com/>
+Get your OpenRouter API key at: <https://openrouter.ai/>
 
 ---
 
@@ -178,14 +178,21 @@ Copy `.env.example` to `.env` — never commit `.env` to git.
 
 | Variable | Required | Description | Default |
 |----------|----------|-------------|---------|
-| `LLM_API_KEY` | **Yes** | DashScope API key for Qwen | — |
+| `LLM_API_KEY` | **Yes** | OpenRouter API key | — |
 | `RAG_ENGINE_MODE` | No | `core` for full pipeline, `fake` for UI testing only | `core` |
 | `RAG_FAISS_INDEX_PATH` | No | Path to FAISS index directory | `./data/faiss_index` |
-| `LLM_MODEL` | No | Qwen model name | `qwen-turbo` |
-| `LLM_BASE_URL` | No | DashScope-compatible endpoint | `https://dashscope.aliyuncs.com/compatible-mode/v1` |
+| `LLM_MODEL` | No | Default model for all LLM tasks | `qwen-turbo` |
+| `LLM_MODEL_REWRITING` | No | Query rewriting model override | `LLM_MODEL` |
+| `LLM_MODEL_GENERATION` | No | Answer generation model override | `LLM_MODEL` |
+| `LLM_MODEL_GRADING` | No | Hallucination grading model override | `LLM_MODEL` |
+| `LLM_MODEL_GRADING_ESCALATION` | No | Future stronger-model grading fallback | `LLM_MODEL_GRADING` |
+| `LLM_BASE_URL` | No | OpenAI-compatible gateway endpoint | `https://dashscope.aliyuncs.com/compatible-mode/v1` |
 | `BACKEND_PORT` | No | Backend server port | `8000` |
 | `FRONTEND_PORT` | No | Frontend dev server port | `5173` |
 | `ALLOWED_ORIGINS` | No | CORS allowed origins | `http://127.0.0.1:5173,http://localhost:5173` |
+
+If you use a shared gateway such as OpenRouter, keep `LLM_API_KEY` and `LLM_BASE_URL`
+shared, and switch models per task with the task-specific `LLM_MODEL_*` variables.
 
 All variables not listed above also have defaults defined in `config/settings.py`.
 

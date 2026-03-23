@@ -5,13 +5,16 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable
 from urllib.parse import urlparse
+
 from dotenv import load_dotenv
-import os
 
 RAG_ENGINE_MODE = os.getenv("RAG_ENGINE_MODE", "core")
 
 ROOT_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(ROOT_DIR / ".env", override=False)
+
+DEFAULT_OPENAI_COMPAT_BASE_URL = "https://openrouter.ai/api/v1"
+DEFAULT_LLM_MODEL = "qwen/qwen-turbo"
 
 
 def _first(keys: Iterable[str], default: str | None = None) -> str | None:
@@ -102,9 +105,13 @@ class RagSettings:
 @dataclass(frozen=True)
 class LLMSettings:
     api_key: str | None
-    model_name: str
     base_url: str
     temperature: float
+    default_model_name: str
+    rewriting_model_name: str
+    generation_model_name: str
+    grading_model_name: str
+    grading_escalation_model_name: str
 
 
 @dataclass(frozen=True)
@@ -200,14 +207,47 @@ def load_settings() -> SystemSettings:
 
     llm = LLMSettings(
         api_key=_first(("LLM_API_KEY",)),
-        model_name=_first(("LLM_MODEL",), "qwen-turbo") or "qwen-turbo",
         base_url=(
-            _first(
-                ("LLM_BASE_URL",), "https://dashscope.aliyuncs.com/compatible-mode/v1"
-            )
-            or "https://dashscope.aliyuncs.com/compatible-mode/v1"
+            _first(("LLM_BASE_URL",), DEFAULT_OPENAI_COMPAT_BASE_URL)
+            or DEFAULT_OPENAI_COMPAT_BASE_URL
         ),
         temperature=_get_float(("LLM_TEMPERATURE",), 0.0),
+        default_model_name=_first(("LLM_MODEL",), DEFAULT_LLM_MODEL)
+        or DEFAULT_LLM_MODEL,
+        rewriting_model_name=(
+            _first(
+                (
+                    "LLM_MODEL_REWRITING",
+                    "LLM_MODEL_QUERY_REWRITING",
+                    "LLM_MODEL",
+                ),
+                DEFAULT_LLM_MODEL,
+            )
+            or DEFAULT_LLM_MODEL
+        ),
+        generation_model_name=(
+            _first(("LLM_MODEL_GENERATION", "LLM_MODEL"), DEFAULT_LLM_MODEL)
+            or DEFAULT_LLM_MODEL
+        ),
+        grading_model_name=(
+            _first(
+                ("LLM_MODEL_GRADING", "LLM_MODEL_HALLUCINATION", "LLM_MODEL"),
+                DEFAULT_LLM_MODEL,
+            )
+            or DEFAULT_LLM_MODEL
+        ),
+        grading_escalation_model_name=(
+            _first(
+                (
+                    "LLM_MODEL_GRADING_ESCALATION",
+                    "LLM_MODEL_HALLUCINATION_ESCALATION",
+                    "LLM_MODEL_GRADING",
+                    "LLM_MODEL",
+                ),
+                DEFAULT_LLM_MODEL,
+            )
+            or DEFAULT_LLM_MODEL
+        ),
     )
 
     return SystemSettings(

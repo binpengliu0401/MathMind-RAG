@@ -314,7 +314,7 @@ def _grade_answer(answer: str, retrieved_docs: list[Document]) -> GradingResult:
         len(claims),
     )
     prompt = _build_grading_prompt()
-    llm = get_llm()
+    llm = get_llm("grading")
     structured_llm = llm.with_structured_output(GradingResult)
     chain = prompt | structured_llm
     result = chain.invoke(
