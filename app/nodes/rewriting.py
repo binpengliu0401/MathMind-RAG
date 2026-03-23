@@ -58,7 +58,7 @@ def rewrite_query(state: GraphState) -> dict:
     rewritten = original_query
 
     try:
-        llm = get_llm()
+        llm = get_llm("rewriting")
         structured_llm = llm.with_structured_output(RewriteOutput)
 
         if not failed_queries:
